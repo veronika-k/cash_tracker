@@ -23,4 +23,6 @@ class WalletRepo(db: Database) {
   def update(wallet: Wallet) = db.run(table.filter(_.id === wallet.id).update(wallet))
 
   def getById(id: Int) = db.run(table.filter(_.id === id).result.headOption)
+
+  def getBalanceById(id: Int) = db.run(table.filter(_.id === id).map(_.balance).result.headOption)
 }
