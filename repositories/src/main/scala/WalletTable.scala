@@ -1,20 +1,26 @@
-class WalletTable (tag: Tag) extends Table[User](tag, "users"){
-        val id = column[Int]("id", O.PrimaryKey)
-        val login = column[String]("login")
-        val password = column[String]("first_name")
-        def * = (id, login, password) <> (User.apply _ tupled, User.unapply)
-        }
 
-        object UserTable {
-        val table = TableQuery[UserTable]
-        }
+import model._
+import slick.jdbc.PostgresProfile.api._
+import slick.lifted.Tag
 
-class UserRepo(db:Database) {
-        val table = TableQuery[UserTable]
+class WalletTable(tag: Tag) extends Table[Wallet](tag, "wallet") {
+  val id = column[Int]("id", O.PrimaryKey)
+  val userId = column[Int]("userId")
+  val balance = column[BigDecimal]("balance", O.SqlType("decimal(10,2)"))
+  val userIdFk = foreignKey("userId_fk", userId, TableQuery[UserTable])(_.id)
+  def * = (id, userId, balance) <> (Wallet.apply _ tupled, Wallet.unapply)
+}
 
-        def create(user: User) = db.run(table returning table += user)
+object WalletTable {
+  val table = TableQuery[WalletTable]
+}
 
-        def update(user: User) = db.run(table.filter(_.id === user.id).update(user))
+class WalletRepo(db: Database) {
+  val table = TableQuery[WalletTable]
 
-        def getById(id: Int) = db.run(table.filter(_.id === id).result.headOption)
-        }
+  def create(wallet: Wallet) = db.run(table returning table += wallet)
+
+  def update(wallet: Wallet) = db.run(table.filter(_.id === wallet.id).update(wallet))
+
+  def getById(id: Int) = db.run(table.filter(_.id === id).result.headOption)
+}

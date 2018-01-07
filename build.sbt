@@ -8,6 +8,17 @@ val globalSettings = Seq[SettingsDefinition](
 
 val model = Project("model", file("model"))
   .settings(globalSettings: _*)
+  .settings(
+    libraryDependencies ++= Seq(
+      "io.circe" %% "circe-core",
+      "io.circe" %% "circe-generic",
+      "io.circe" %% "circe-parser",
+      "io.circe" %% "circe-optics"
+    ).map(_ % "0.8.0"),
+    addCompilerPlugin(
+      "org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full
+    )
+  )
 
 val repositories = Project("repositories", file("repositories"))
   .dependsOn(model)
