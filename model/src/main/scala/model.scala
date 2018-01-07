@@ -14,8 +14,6 @@ package object model {
                          amount: BigDecimal,
                          date: Timestamp,
                          isIncome: Boolean)
-
-
 }
 
 

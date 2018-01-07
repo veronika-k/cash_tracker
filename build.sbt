@@ -32,3 +32,18 @@ val repositories = Project("repositories", file("repositories"))
       "com.github.tminglei" %% "slick-pg" % "0.15.4"
     )
   )
+
+val application = Project("application", file("application"))
+  .dependsOn(repositories)
+  .settings(globalSettings: _*)
+  .settings(
+    libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-http" % "10.0.11",
+      "com.typesafe.akka" %% "akka-http-testkit" % "10.0.11" % Test,
+      "de.heikoseeberger" %% "akka-http-circe" % "1.18.0"
+    ),
+    resolvers += Resolver.bintrayRepo("hseeberger", "maven")
+  )
+
+val root = Project("cash_tracker", file("."))
+  .aggregate(application)
