@@ -9,6 +9,7 @@ object Repositories {
   val walletRepo = new WalletRepo(db)
   val categoryRepo = new CategoryRepo(db)
   val transactionRepo = new TransactionRepo(db)
+  val tokenRepo = new TokenRepo(db)
 
   def getUserWalletQuery(userId: Int) = {
     userRepo.table
@@ -70,29 +71,50 @@ object Repositories {
 
   //change Null
   def getUserTransactionParams(userId: Int, categoryId: Int,
-                               walletId: Int, timeFrom:Timestamp, timeTo:Timestamp)={
-    getUserWalletsCategoriesTransactionsQuery(userId).filter{
+                               walletId: Int, timeFrom: Timestamp, timeTo: Timestamp) = {
+    getUserWalletsCategoriesTransactionsQuery(userId).filter {
       case (((user, wallet), transaction), category) => if (categoryId != null) category.id === categoryId else true
-    }.filter{
+    }.filter {
       case (((user, wallet), transaction), category) => if (walletId != null) wallet.id === walletId else true
-    }.filter{
+    }.filter {
       case (((user, wallet), transaction), category) => if (timeFrom != null && timeTo != null)
         (transaction.date < timeTo && transaction.date > timeFrom)
       else true
     }
   }
 
-  def getUserCategoryPercents(userId: Int, walletId: Int, timeFrom:Timestamp, timeTo:Timestamp) =
-  {
+  def getUserTransactionParamsFormatted(userId: Int, categoryId: Int,
+                                        walletId: Int, timeFrom: Timestamp, timeTo: Timestamp) = {
+    val query = getUserTransactionParams(userId, categoryId, walletId, timeFrom, timeTo)
+      .map {
+        case (((user, wallet), transaction), category) => (wallet.id, category.name,
+          transaction.amount, transaction.date, transaction.isIncome)
+      }
+    db.run(query.result)
+  }
+
+  def getUserCategoryTransactionNumber(userId: Int, walletId: Int, timeFrom: Timestamp, timeTo: Timestamp) = {
     val categoriesTransactionNumber = getUserTransactionParams(userId, null, walletId, timeFrom, timeTo)
-      .groupBy{case (((user, wallet), transaction), category) => (category.id, category.name)}
-      .map{case ((categoryId, categoryName), group) => (categoryId, categoryName, group.size)}
+      .groupBy { case (((user, wallet), transaction), category) => (category.id, category.name) }
+      .map { case ((categoryId, categoryName), group) => (categoryId, categoryName, group.size) }
     val allTransactionNumber = categoriesTransactionNumber.map(_._2).sum
     val categoriesPercents = categoriesTransactionNumber.
-      map{
-      case (categoryId, categoryName, categorySize) =>
-        (categoryId, categoryName, categorySize/allTransactionNumber)
-    }
+      map {
+        case (categoryId, categoryName, categorySize) =>
+            (categoryId, categoryName, categorySize, allTransactionNumber)
+      }
+    db.run(categoriesPercents.result)
   }
+
+  def getUserId(login:String, password: String) =
+  {
+    userRepo.table.filter{ case user => user.login === login && user.password === password}.take(1).map(_.id)
+  }
+
+//  def generateToken(login:String, password: String) =
+//  {
+//    tokenRepo.table.filter( case token => getUserId(login, password).result === token.userId}
+//      .map{case(userId, token) => token.status}
+//  }
 
 }
