@@ -4,7 +4,6 @@ import slick.jdbc.PostgresProfile.api._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
-import scala.util.Success
 
 object Repositories {
   val db = Database.forURL(
@@ -141,18 +140,16 @@ object Repositories {
   //    return tokenRepo.getToken(token)
   //  }
 
-  def generateTokenRun(login: String, password: String, token: String): Unit = {
-    db.run(getUserId(login, password).result).onComplete {
-      case Success(userId) => deactivateToken(userId.head).onComplete {
-        case Success(_) =>
-          Await.result(tokenRepo.create(new Token(userId.head, true, token)), Duration.Inf)
-      }
-    }
+  def generateTokenRun(login: String, password: String, token: String) = {
+    for {userId <- db.run(getUserId(login, password).result)
+      deactivate <- deactivateToken(userId.head)
+      created <- tokenRepo.create(new Token(userId.head, true, token))
+      result <- tokenRepo.getToken(token)} yield result
+    
   }
 
-  def generateToken(login: String, password: String): Future[Token] = {
+  def generateToken(login: String, password: String) = {
     val token = java.util.UUID.randomUUID().toString
     generateTokenRun(login, password, token)
-    tokenRepo.getToken(token)
   }
 }
