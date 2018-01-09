@@ -26,5 +26,5 @@ class TransactionRepo(db:Database) {
 
   def update(transaction: Transaction) = db.run(table.filter(_.id === transaction.id).update(transaction))
 
-  def getById(id: Int) = db.run(table.filter(_.id === id).result.headOption)
+  def getById(id: Long) = db.run(table.filter(_.id === id).result.headOption)
 }

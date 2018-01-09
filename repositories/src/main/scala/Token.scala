@@ -2,6 +2,8 @@ import model._
 import slick.jdbc.PostgresProfile.api._
 import slick.lifted.Tag
 
+import scala.concurrent.Future
+
 /**
   * Created by inoquea on 08.01.18.
   */
@@ -28,4 +30,8 @@ class TokenRepo(db: Database) {
   def create(token: Token) = {
     db.run(table returning table += token)
   }
+  def getToken(token: String) = {
+    db.run(table.filter(_.token === token).result.head)
+  }
+
 }
