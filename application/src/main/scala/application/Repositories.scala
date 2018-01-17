@@ -1,9 +1,9 @@
 import model._
 import slick.jdbc.PostgresProfile.api._
 
+import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
 
 object Repositories {
   val db = Database.forURL(
@@ -142,14 +142,37 @@ object Repositories {
 
   def generateTokenRun(login: String, password: String, token: String) = {
     for {userId <- db.run(getUserId(login, password).result)
-      deactivate <- deactivateToken(userId.head)
-      created <- tokenRepo.create(new Token(userId.head, true, token))
-      result <- tokenRepo.getToken(token)} yield result
-    
+         deactivate <- deactivateToken(userId.head)
+         created <- tokenRepo.create(new Token(userId.head, true, token))
+         result <- tokenRepo.getToken(token)} yield result
+
   }
 
   def generateToken(login: String, password: String) = {
     val token = java.util.UUID.randomUUID().toString
     generateTokenRun(login, password, token)
+  }
+
+  def verifyUserQuery(token: String) = {
+    for {isActive <- db.run(tokenRepo.table.filter(_.token === token)
+      .map(_.active).result.headOption)
+                      } yield {isActive match {
+      case None => false
+      case Some(active) => active}
+    }
+  }
+
+  def getUserIdFromTokenQuery(token: String) ={
+    tokenRepo.table.filter(_.token === token)
+      .map(_.userId)
+  }
+
+  def getWalletBalance(token: String, walletId:Int) =
+  {
+    val userId = getUserIdFromTokenQuery(token)
+    val query = walletRepo.table.
+      filter{ case wallet => wallet.id === walletId && (wallet.userId in userId)}
+      .map(_.balance)
+    db.run(query.result.headOption)
   }
 }

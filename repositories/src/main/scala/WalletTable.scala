@@ -24,5 +24,4 @@ class WalletRepo(db: Database) {
 
   def getById(id: Int) = db.run(table.filter(_.id === id).result.headOption)
 
-  def getBalanceById(id: Int) = db.run(table.filter(_.id === id).map(_.balance).result.headOption)
 }
