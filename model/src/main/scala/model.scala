@@ -35,6 +35,19 @@ package object model {
                                transactionDate: Timestamp,
                                transactionType: Boolean)
 
+  @JsonCodec
+  case class StatisticsQuery(name: String, percent: BigDecimal)
+
+  @JsonCodec
+  case class StatisticsQueryList(list: List[StatisticsQuery])
+
+  @JsonCodec
+  case class TransQuery(name: String, isIncome: Boolean, amount: BigDecimal, date: Timestamp)
+
+  @JsonCodec
+  case class TransQueryList(list: List[TransQuery])
+
+
   implicit val TimestampFormat: Encoder[Timestamp] with Decoder[Timestamp] =
     new Encoder[Timestamp] with Decoder[Timestamp] {
       override def apply(a: Timestamp): Json =

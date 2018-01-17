@@ -2,6 +2,8 @@ import model._
 import slick.lifted.Tag
 import slick.jdbc.PostgresProfile.api._
 
+import scala.concurrent.Future
+
 class UserTable (tag: Tag) extends Table[User](tag, "users"){
   val id = column[Int]("id", O.PrimaryKey)
   val login = column[String]("login")
